@@ -71,12 +71,16 @@ public class MainActivity extends Activity implements View.OnClickListener{
             @Override
             public void onMatchedConnected(boolean success) {
                 super.onMatchedConnected(success);
-                dismissPdg();
-                Toast.makeText(getApplicationContext(), R.string.matchedConnected, Toast.LENGTH_SHORT).show();
-                //开始验证链接
-                int randNo= (int) (Math.random()*1000);
-                randNo=randNo<100?randNo+100:randNo;
-                initView(false);
+                if(success) {
+                    dismissPdg();
+                    Toast.makeText(getApplicationContext(), R.string.matchedConnected, Toast.LENGTH_SHORT).show();
+                    //开始验证链接
+                    int randNo = (int) (Math.random() * 1000);
+                    randNo = randNo < 100 ? randNo + 100 : randNo;
+                    initView(false);
+                }else{
+                    handleError(getString(R.string.connectionFailed));
+                }
             }
         };
         initView(true);
