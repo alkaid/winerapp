@@ -21,13 +21,17 @@
 package com.alkaid.winerapp;
 
 import android.bluetooth.BluetoothSocket;
+import android.util.Log;
 
- /**
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+
+/**
  * Packet接收解析类
  * @author lincong
  *
  */
-class PacketReader {
+public class PacketReader {
     public static boolean logined=false;
     private Thread readerThread;
     private boolean done;
@@ -35,7 +39,7 @@ class PacketReader {
      private PacketReadListener packetReadListener;
 
 
-    protected PacketReader(BluetoothSocket socket) {
+    public PacketReader(BluetoothSocket socket) {
         this.socket = socket;
         this.init();
     }
@@ -81,14 +85,24 @@ class PacketReader {
      */
     private void parsePackets(Thread thread) {
         try {
+            InputStream mmInStream = null;
+            byte[] buffer = new byte[4096];
+            int len = 0;
+            mmInStream=socket.getInputStream();
             do {
-                M2sPacket packet=null;
-                byte[] data=Util.readSocketData(socket);
+                ByteArrayOutputStream outSteam = new ByteArrayOutputStream();
+                len = mmInStream.read(buffer);
+                Log.d("", "reading1...len=" + len);
+                if(len!=-1){
+                    outSteam.write(buffer, 0, len);
+                }
+                byte[] data=outSteam.toByteArray();
+                S2cPacket packet=null;
                 if(!logined){
-                    packet=new M2sLoginPacket(data);
+                    packet=new S2cLoginPacket(data);
                     logined=true;
                 }else{
-                    packet=new M2sDefaultResponse(data);
+                    packet=new S2cDefaultResponse(data);
                 }
                 if(null!=packet&&null!=packetReadListener){
                     packetReadListener.onPacketRead(packet);
@@ -106,7 +120,7 @@ class PacketReader {
     }
 
      public interface PacketReadListener{
-         public void onPacketRead(M2sPacket packet);
+         public void onPacketRead(S2cPacket packet);
          public void onException(Exception e);
      }
     

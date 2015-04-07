@@ -265,6 +265,7 @@ public class BluetoothClientOp {
         	mbtApapter.cancelDiscovery();
         }
         deviceAddresses.clear();
+        displayDevices.clear();
         mbtApapter.startDiscovery();
         if(Constants.D) Log.d(TAG,"开始搜索,搜索重试次数="+search_count);
         Util.toast(ctx, "开始搜索,搜索重试次数="+search_count);
@@ -351,7 +352,7 @@ public class BluetoothClientOp {
      * @return
      */
 	private boolean directConnect(BluetoothDevice device) {
-		getUUID(device);
+//		getUUID(device);
 		BluetoothSocket tmp = null;
 		try {
 			tmp = device.createRfcommSocketToServiceRecord(Constants.MY_UUID);
@@ -365,6 +366,7 @@ public class BluetoothClientOp {
 		if(successConnect){
 			if(Constants.D) Log.d(TAG,"socket连接成功 ");
 			Util.toast(ctx, "socket连接成功");
+            onMatchedConnected(true);
 		}else{
 			if(Constants.D) Log.d(TAG,"socket连接重试"+CONNECT_COUNT+"次后失败");
 			Util.toast(ctx, "socket连接重试"+CONNECT_COUNT+"次后失败");

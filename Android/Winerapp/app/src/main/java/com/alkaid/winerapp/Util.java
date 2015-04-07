@@ -28,7 +28,15 @@ public class Util {
 			throw e;
 		}
 	}
-    public static void writeSocketData(BluetoothSocket socket,int cmd) throws IOException{
+
+    /**
+     * 字节数
+     * @param socket
+     * @param cmd
+     * @param byteNo
+     * @throws IOException
+     */
+    public static void writeSocketData(BluetoothSocket socket,int cmd,int byteNo) throws IOException{
         OutputStream mmOutStream=null;
         DataOutputStream dos=null;
         try {
@@ -39,7 +47,7 @@ public class Util {
         }
         try {
             dos=new DataOutputStream(mmOutStream);
-            dos.write(cmd);
+            dos.write(toByteArray(cmd,byteNo));
         } catch (IOException e) {
             Log.e(TAG, "write outputStream error", e);
             throw e;
@@ -85,12 +93,40 @@ public class Util {
 		}
 	}
 
-    public static int byteArrayToInt(byte[] b) {
-        return   b[3] & 0xFF |
-                (b[2] & 0xFF) << 8 |
-                (b[1] & 0xFF) << 16 |
-                (b[0] & 0xFF) << 24;
+    public static byte[] toByteArray(int iSource, int iArrayLen) {
+        byte[] bLocalArr = new byte[iArrayLen];
+        for (int i = 0; (i < 4) && (i < iArrayLen); i++) {
+            bLocalArr[i] = (byte) (iSource >> 8 * i & 0xFF);
+        }
+        return bLocalArr;
     }
+
+    // 将byte数组bRefArr转为一个整数,字节数组的低位是整型的低字节位
+    public static int byteArrayToInt(byte[] bRefArr) {
+        int iOutcome = 0;
+        byte bLoop;
+
+        for (int i = 0; i < bRefArr.length; i++) {
+            bLoop = bRefArr[i];
+            iOutcome += (bLoop & 0xFF) << (8 * i);
+        }
+        return iOutcome;
+    }
+
+    /*public static int byteArrayToInt(byte[] b) {
+        int len=b.length;
+        if(len==1){
+            return b[0] & 0xFF;
+        }else if(len==2){
+            return b[0] & 0xFF | (b[1] & 0xFF) << 8;
+        }else if(len==4){
+            return   b[3] & 0xFF |
+                    (b[2] & 0xFF) << 8 |
+                    (b[1] & 0xFF) << 16 |
+                    (b[0] & 0xFF) << 24;
+        }
+        return -1;
+    }*/
 
     /**
      * 加密

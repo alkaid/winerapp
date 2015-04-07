@@ -12,6 +12,8 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
@@ -32,6 +34,14 @@ public class MainActivity extends Activity implements View.OnClickListener{
     private PacketReader reader;
     private Status status;
     private ImageView imgTurnForward,imgTurnBack,imgLightStatus,imgSwitchStatus,imgCurMoto,imgCurTpd;
+    private Handler mHandler;
+
+    private static final int MSG_WHAT_INIT_VIEW_UNLOAD=1;
+    private static final int MSG_WHAT_INIT_VIEW_LOAD=2;
+    private static final int MSG_WHAT_ERROR=3;
+    private static final int MSG_WHAT_UPDATE_STATUS=4;
+
+//    private static final String BUNDLE_KEY_ERRORMSG="BUNDLE_KEY_ERRORMSG";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,6 +55,8 @@ public class MainActivity extends Activity implements View.OnClickListener{
         imgSwitchStatus= (ImageView) findViewById(R.id.imgSwitchStatus);
         imgCurMoto= (ImageView) findViewById(R.id.imgCurMoto);
         imgCurTpd= (ImageView) findViewById(R.id.imgCurTpd);
+        //Test
+//        status=new Status();
         btop = new BluetoothClientOp(this,true){
             @Override
             protected void onNotBluetoothAvailable() {
@@ -101,14 +113,42 @@ public class MainActivity extends Activity implements View.OnClickListener{
                     int randNo = (int) (Math.random() * 1000);
                     randNo = randNo < 100 ? randNo + 100 : randNo;
                     status.setAuthCode(randNo);
+                    //Test
                     try {
-                        Util.writeSocketData(btop.getMmSocket(),randNo);
+                        Thread.sleep(500);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    try {
+                        Util.writeSocketData(btop.getMmSocket(),randNo,2);
                     } catch (IOException e) {
                         Log.e(TAG,"Write auth code to server error!",e);
                         handleError(e.getMessage());
                     }
                 }else{
                     handleError(getString(R.string.connectionFailed));
+                }
+            }
+        };
+        mHandler=new Handler(){
+            @Override
+            public void handleMessage(Message msg) {
+                switch (msg.what){
+                    case MSG_WHAT_INIT_VIEW_LOAD:
+                        initView(true);
+                        break;
+                    case MSG_WHAT_INIT_VIEW_UNLOAD:
+                        initView(false);
+                        break;
+                    case MSG_WHAT_ERROR:
+                        String errMsg= (String) msg.obj;
+                        handleError(errMsg);
+                        break;
+                    case MSG_WHAT_UPDATE_STATUS:
+                        updateStatusView();
+                        break;
+                    default:
+                        break;
                 }
             }
         };
@@ -121,24 +161,27 @@ public class MainActivity extends Activity implements View.OnClickListener{
         reader=new PacketReader(btop.getMmSocket());
         reader.setPacketReadListener(new PacketReader.PacketReadListener() {
             @Override
-            public void onPacketRead(M2sPacket packet) {
-                if(packet instanceof M2sLoginPacket){
-                    M2sLoginPacket loginPacket=(M2sLoginPacket)packet;
+            public void onPacketRead(S2cPacket packet) {
+                if(packet instanceof S2cLoginPacket){
+                    S2cLoginPacket loginPacket=(S2cLoginPacket)packet;
                     int verfication=Util.encode(status.getAuthCode());
-                    Log.d(TAG,"上位机verficaiton="+verfication+" 下位机verfication="+loginPacket.getVerification());
+                    Log.d(TAG,"上位机randNo="+status.getAuthCode()+" verficaiton="+verfication+" 下位机verfication="+loginPacket.getVerification());
                     if(verfication==loginPacket.getVerification()){
                         status.setMotoNums(loginPacket.getMotoNums());
                         //验证成功
-                        initView(false);
+//                        initView(false);
+                        mHandler.sendEmptyMessage(MSG_WHAT_INIT_VIEW_UNLOAD);
                     }else{
-                        handleError(getString(R.string.verifyFailed));
+                        Message msg=mHandler.obtainMessage(MSG_WHAT_ERROR);
+                        msg.obj=getString(R.string.verifyFailed);
+                        mHandler.sendMessage(msg);
                     }
-                }else if(packet instanceof M2sDefaultResponse){
+                }else if(packet instanceof S2cDefaultResponse){
                     switch (status.getCurCmd()){
                         //TODO 根据之前的命令更新状态
 
                     }
-                    updateStatusView();
+                    mHandler.sendEmptyMessage(MSG_WHAT_UPDATE_STATUS);
                 }
             }
             @Override
@@ -175,16 +218,20 @@ public class MainActivity extends Activity implements View.OnClickListener{
         }else{
             imgSwitchStatus.setImageResource(R.drawable.ico_turn_00);
         }
-
+        imgCurMoto.setImageBitmap(drawNumImg(status.getCurMoto()));
+        imgCurTpd.setImageBitmap(drawNumImg(status.getTpd()));
     }
 
     private Bitmap drawNumImg(int num){
         //原图 83*138px  42*69dp
-        float w= TypedValue.applyDimension(TypedValue.TYPE_DIMENSION,42,getResources().getDisplayMetrics());
-        float h= TypedValue.applyDimension(TypedValue.TYPE_DIMENSION,69,getResources().getDisplayMetrics());
-        float spacing=TypedValue.applyDimension(TypedValue.TYPE_DIMENSION,3,getResources().getDisplayMetrics());
+        float w= TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,42,getResources().getDisplayMetrics());
+        float h= TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,69,getResources().getDisplayMetrics());
+        float spacing=TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,3,getResources().getDisplayMetrics());
         Bitmap result=null;
         List<Integer> nums=new ArrayList<Integer>();
+        if(num==0){
+            nums.add(0);
+        }
         while (num!=0){
             nums.add(num%10);
             num/=10;
@@ -196,15 +243,15 @@ public class MainActivity extends Activity implements View.OnClickListener{
         for(int i=nums.size()-1;i>=0;i--){
             int id = getResources().getIdentifier("number"+nums.get(i),"drawable",getPackageName());
             Bitmap imgNo= BitmapFactory.decodeResource(this.getResources(),id);
-
-            canvas.drawBitmap(left,top,imgNo);
+            float left=(nums.size()-1-i)*(w+spacing);
+            canvas.drawBitmap(imgNo,left,0,mPaint);
         }
         return result;
     }
 
     private void sendCmd(int cmd){
         try {
-            Util.writeSocketData(btop.getMmSocket(),cmd);
+            Util.writeSocketData(btop.getMmSocket(),cmd,2);
         } catch (IOException e) {
             Log.e(TAG,"",e);
             handleError(getString(R.string.unknowException)+"\n"+e.getMessage());
@@ -269,6 +316,7 @@ public class MainActivity extends Activity implements View.OnClickListener{
             layBar.setVisibility(View.VISIBLE);
             layMain.setBackgroundResource(R.drawable.main_bg);
             updateStatusView();
+            dismissPdg();
         }
     }
 
@@ -281,7 +329,7 @@ public class MainActivity extends Activity implements View.OnClickListener{
 
     private void handleError(String msg){
         dismissPdg();
-        Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
+//        Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
         btop.cancel();
         if(null!=reader){
             reader.shutdown();
@@ -323,7 +371,6 @@ public class MainActivity extends Activity implements View.OnClickListener{
                 handleError(getString(R.string.cancelChooseDevice));
                 return;
             }
-            dismissPdg();
             pdg=ProgressDialog.show(this,null,getString(R.string.tip_connect_device),true,true,new DialogInterface.OnCancelListener() {
                 @Override
                 public void onCancel(DialogInterface dialog) {

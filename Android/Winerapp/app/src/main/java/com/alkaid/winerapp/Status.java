@@ -93,4 +93,11 @@ public class Status {
     public void setCurCmd(int curCmd) {
         this.curCmd = curCmd;
     }
+
+    public int getTpd(){
+        if(curMoto==0){
+            return TPDS_ZERO[curTpdIndex];
+        }
+        return TPDS_NORMAL[curTpdIndex];
+    }
 }
