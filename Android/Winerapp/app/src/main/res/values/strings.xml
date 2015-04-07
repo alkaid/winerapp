@@ -16,4 +16,7 @@
     <string name="matchedConnected">Connect and match success!</string>
     <string name="cancelChooseDevice">You cancel to choose a device!</string>
     <string name="cancelConnectDevice">You cancel to connect the device!</string>
+    <string name="cancelVerifyDevice">You cancel to verify the device!</string>
+    <string name="beginVerify">Verifing the device now...</string>
+    <string name="verifyFailed">Verify the device faild...</string>
 </resources>

@@ -15,4 +15,16 @@ public class M2sLoginPacket extends M2sPacket {
         motoNums=Integer.parseInt(motoNumStr);
         verification=Integer.parseInt(verificationStr);
     }
+
+    public String getInitData() {
+        return initData;
+    }
+
+    public int getVerification() {
+        return verification;
+    }
+
+    public int getMotoNums() {
+        return motoNums;
+    }
 }

@@ -29,4 +29,6 @@ public class Constants {
 	
 	public static final String LIST_DEVICES="list_devices";
 	public static final String SELECTED_INDEX="selected_index";
+
+
 }

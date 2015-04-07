@@ -75,15 +75,6 @@ class PacketReader {
     }
 
     /**
-     * Resets the parser using the latest connection's reader. Reseting the parser is necessary
-     * when the plain connection has been secured or when a new opening stream element is going
-     * to be sent by the server.
-     */
-    private void resetSocket(BluetoothSocket socket) {
-        this.socket=socket;
-    }
-
-    /**
      * Parse top-level packets in order to process them further.
      *
      * @param thread the thread that is being used by the reader to parse incoming packets.

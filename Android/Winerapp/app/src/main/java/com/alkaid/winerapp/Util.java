@@ -6,6 +6,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -27,6 +28,23 @@ public class Util {
 			throw e;
 		}
 	}
+    public static void writeSocketData(BluetoothSocket socket,int cmd) throws IOException{
+        OutputStream mmOutStream=null;
+        DataOutputStream dos=null;
+        try {
+            mmOutStream = socket.getOutputStream();
+        } catch (IOException e) {
+            Log.e(TAG, "get outputStream error", e);
+            throw e;
+        }
+        try {
+            dos=new DataOutputStream(mmOutStream);
+            dos.write(cmd);
+        } catch (IOException e) {
+            Log.e(TAG, "write outputStream error", e);
+            throw e;
+        }
+    }
 	public static byte[] readSocketData(BluetoothSocket socket){
     	InputStream mmInStream = null;
     	try {
@@ -72,5 +90,19 @@ public class Util {
                 (b[2] & 0xFF) << 8 |
                 (b[1] & 0xFF) << 16 |
                 (b[0] & 0xFF) << 24;
+    }
+
+    /**
+     * 加密
+     * @param num  100=<num<999
+     * @return
+     */
+    public static int encode(int num){
+        int ab=num/10;
+        int c=0;
+        c= num%2!=0? num%14 : num%36;
+        int d=ab*c;
+        int result=num+d;
+        return result;
     }
 }
