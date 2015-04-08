@@ -30,6 +30,24 @@ public class Status {
     private int curTpdIndex=0;
     private int curCmd=-1;
 
+    public void changeMoto(){
+        curMoto++;
+        //TODO motoNums=4时是否包括ID为00的Moto
+        if(curMoto>motoNums){
+            curMoto=0;
+        }
+        curTpdIndex=0;
+    }
+
+    public void changeTpd() {
+        curTpdIndex++;
+        if (curMoto == 0 && curTpdIndex >= TPDS_ZERO.length) {
+            curTpdIndex = 0;
+        } else if (curMoto != 0 && curTpdIndex >= TPDS_NORMAL.length) {
+            curTpdIndex = 0;
+        }
+    }
+
     public int getAuthCode() {
         return authCode;
     }

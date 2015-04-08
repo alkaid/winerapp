@@ -29,10 +29,11 @@ public class MainActivity extends Activity implements View.OnClickListener{
     private static String TAG="Winerapp";
     private BluetoothClientOp btop;
     private List<String> deviceAddresses=new ArrayList<String>();
-    private View layBar,layMain;
     private ProgressDialog pdg;
+    private AlertDialog errorDialog;
     private PacketReader reader;
     private Status status;
+    private View layBar,layMain,layContent;
     private ImageView imgTurnForward,imgTurnBack,imgLightStatus,imgSwitchStatus,imgCurMoto,imgCurTpd;
     private Handler mHandler;
 
@@ -49,6 +50,7 @@ public class MainActivity extends Activity implements View.OnClickListener{
         setContentView(R.layout.activity_main);
         layBar=findViewById(R.id.layBar);
         layMain=findViewById(R.id.layMain);
+        layContent=findViewById(R.id.layContent);
         imgTurnForward = (ImageView) findViewById(R.id.imgTurnForward);
         imgTurnBack= (ImageView) findViewById(R.id.imgTurnBack);
         imgLightStatus= (ImageView) findViewById(R.id.imgLightStatus);
@@ -145,6 +147,7 @@ public class MainActivity extends Activity implements View.OnClickListener{
                         handleError(errMsg);
                         break;
                     case MSG_WHAT_UPDATE_STATUS:
+                        dismissPdg();
                         updateStatusView();
                         break;
                     default:
@@ -159,6 +162,7 @@ public class MainActivity extends Activity implements View.OnClickListener{
     private void startReader(){
         if(null!=reader) reader.shutdown();
         reader=new PacketReader(btop.getMmSocket());
+        //TODO 应有超时监控
         reader.setPacketReadListener(new PacketReader.PacketReadListener() {
             @Override
             public void onPacketRead(S2cPacket packet) {
@@ -178,8 +182,34 @@ public class MainActivity extends Activity implements View.OnClickListener{
                     }
                 }else if(packet instanceof S2cDefaultResponse){
                     switch (status.getCurCmd()){
-                        //TODO 根据之前的命令更新状态
-
+                        //根据之前的命令更新状态
+                        case Status.CMD_LIGHT_OFF:
+                            status.setLightOn(false);
+                            break;
+                        case Status.CMD_LIGHT_ON:
+                            status.setLightOn(true);
+                            break;
+                        case Status.CMD_MOTO:
+                            status.changeMoto();
+                            break;
+                        case Status.CMD_SWITCH_OFF:
+                            status.setSwitchOn(false);
+                            break;
+                        case Status.CMD_SWITCH_ON:
+                            status.setSwitchOn(true);
+                            break;
+                        case Status.CMD_TPD:
+                            status.changeTpd();
+                            break;
+                        case Status.CMD_TURN_ALL:
+                            status.setTurnStatus(Status.TURN_STATUS_ALL);
+                            break;
+                        case Status.CMD_TURN_BACK:
+                            status.setTurnStatus(Status.TURN_STATUS_BACK);
+                            break;
+                        case Status.CMD_TURN_FOWARD:
+                            status.setTurnStatus(Status.TURN_STATUS_FORWARD);
+                            break;
                     }
                     mHandler.sendEmptyMessage(MSG_WHAT_UPDATE_STATUS);
                 }
@@ -194,6 +224,7 @@ public class MainActivity extends Activity implements View.OnClickListener{
     }
 
     private void updateStatusView(){
+        //TODO 应有动画播放
         switch (status.getTurnStatus()){
             case Status.TURN_STATUS_ALL:
                 imgTurnBack.setVisibility(View.VISIBLE);
@@ -281,7 +312,7 @@ public class MainActivity extends Activity implements View.OnClickListener{
                         cmd=Status.CMD_TURN_BACK;
                         break;
                     case Status.TURN_STATUS_BACK:
-                        cmd=Status.TURN_STATUS_ALL;
+                        cmd=Status.CMD_TURN_ALL;
                         break;
                     case Status.TURN_STATUS_ALL:
                         cmd=Status.CMD_TURN_FOWARD;
@@ -298,7 +329,8 @@ public class MainActivity extends Activity implements View.OnClickListener{
 
     private void initView(boolean loading){
         if(loading){
-            layBar.setVisibility(View.GONE);
+            layBar.setVisibility(View.INVISIBLE);
+            layContent.setVisibility(View.INVISIBLE);
             layMain.setBackgroundResource(R.drawable.loading_bg);
             pdg=ProgressDialog.show(this,null,getString(R.string.tip_find_device),true,true,new DialogInterface.OnCancelListener() {
                 @Override
@@ -314,6 +346,7 @@ public class MainActivity extends Activity implements View.OnClickListener{
             btop.operation();
         }else {
             layBar.setVisibility(View.VISIBLE);
+            layContent.setVisibility(View.VISIBLE);
             layMain.setBackgroundResource(R.drawable.main_bg);
             updateStatusView();
             dismissPdg();
@@ -335,30 +368,34 @@ public class MainActivity extends Activity implements View.OnClickListener{
             reader.shutdown();
         }
         msg+="\nPlease retry or exit.";
-        AlertDialog.Builder b=new AlertDialog.Builder(this)
-                .setMessage(msg).setCancelable(false)
-                .setPositiveButton(R.string.btn_retry,new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                        pdg=ProgressDialog.show(MainActivity.this,null,getString(R.string.tip_find_device),true,true,new DialogInterface.OnCancelListener() {
-                            @Override
-                            public void onCancel(DialogInterface dialog) {
-                                btop.cancel();
-                                finish();
-                            }
-                        });
-                        btop.operation();
-                    }
-                }).setNegativeButton(R.string.btn_exit,new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                        finish();
-                    }
-                })
-                ;
-        b.create().show();
+        if(null!=errorDialog&&errorDialog.isShowing()){
+            errorDialog.setMessage(msg);
+        }else {
+            errorDialog = new AlertDialog.Builder(this)
+                    .setMessage(msg).setCancelable(false)
+                    .setPositiveButton(R.string.btn_retry, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                            pdg = ProgressDialog.show(MainActivity.this, null, getString(R.string.tip_find_device), true, true, new DialogInterface.OnCancelListener() {
+                                @Override
+                                public void onCancel(DialogInterface dialog) {
+                                    btop.cancel();
+                                    finish();
+                                }
+                            });
+                            btop.operation();
+                        }
+                    }).setNegativeButton(R.string.btn_exit, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                            finish();
+                        }
+                    }).create();
+            ;
+            errorDialog.show();
+        }
     }
 
     @Override
