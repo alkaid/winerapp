@@ -52,7 +52,7 @@ public class BluetoothServerOp {
 	        }
         if(isBluetoothEnable){
             AcceptThread t=new AcceptThread();
-            t.start();;
+            t.start();
         }
 	}
 
