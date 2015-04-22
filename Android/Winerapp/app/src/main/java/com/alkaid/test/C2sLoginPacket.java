@@ -11,7 +11,9 @@ public class C2sLoginPacket extends  C2sPacket {
     private int num;
     public C2sLoginPacket(byte[] data) throws Exception {
         super(data);
-        this.num= Util.byteArrayToInt(data);
+        String numStr=new String(data);
+//        this.num= Util.byteArrayToInt(data);
+        this.num=Integer.valueOf(numStr);
         Log.d("Alkaid", "C2sLoginPacket num=" + num);
     }
 

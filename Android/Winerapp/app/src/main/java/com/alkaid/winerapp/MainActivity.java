@@ -41,6 +41,7 @@ public class MainActivity extends Activity implements View.OnClickListener{
     private static final int MSG_WHAT_INIT_VIEW_LOAD=2;
     private static final int MSG_WHAT_ERROR=3;
     private static final int MSG_WHAT_UPDATE_STATUS=4;
+    private static final int MSG_WHAT_VERIFY_ERROR=5;
 
 //    private static final String BUNDLE_KEY_ERRORMSG="BUNDLE_KEY_ERRORMSG";
 
@@ -58,7 +59,7 @@ public class MainActivity extends Activity implements View.OnClickListener{
         imgCurMoto= (ImageView) findViewById(R.id.imgCurMoto);
         imgCurTpd= (ImageView) findViewById(R.id.imgCurTpd);
         //Test
-//        status=new Status();
+        status=new Status();
         btop = new BluetoothClientOp(this,true){
             @Override
             protected void onNotBluetoothAvailable() {
@@ -122,7 +123,8 @@ public class MainActivity extends Activity implements View.OnClickListener{
                         e.printStackTrace();
                     }
                     try {
-                        Util.writeSocketData(btop.getMmSocket(),randNo,2);
+                        //Util.writeSocketData(btop.getMmSocket(),randNo,2);
+                        Util.writeSocketData(btop.getMmSocket(),String.valueOf(randNo).getBytes());
                     } catch (IOException e) {
                         Log.e(TAG,"Write auth code to server error!",e);
                         handleError(e.getMessage());
@@ -146,6 +148,12 @@ public class MainActivity extends Activity implements View.OnClickListener{
                         String errMsg= (String) msg.obj;
                         handleError(errMsg);
                         break;
+                    case MSG_WHAT_VERIFY_ERROR:
+                        String emsg= (String) msg.obj;
+                        handleError(emsg);
+                        layBar.setVisibility(View.VISIBLE);
+                        layContent.setVisibility(View.VISIBLE);
+                        break;
                     case MSG_WHAT_UPDATE_STATUS:
                         dismissPdg();
                         updateStatusView();
@@ -155,6 +163,8 @@ public class MainActivity extends Activity implements View.OnClickListener{
                 }
             }
         };
+        layBar.setVisibility(View.INVISIBLE);
+        layContent.setVisibility(View.INVISIBLE);
         initView(true);
 
     }
@@ -176,7 +186,7 @@ public class MainActivity extends Activity implements View.OnClickListener{
 //                        initView(false);
                         mHandler.sendEmptyMessage(MSG_WHAT_INIT_VIEW_UNLOAD);
                     }else{
-                        Message msg=mHandler.obtainMessage(MSG_WHAT_ERROR);
+                        Message msg=mHandler.obtainMessage(MSG_WHAT_VERIFY_ERROR);
                         msg.obj=getString(R.string.verifyFailed);
                         mHandler.sendMessage(msg);
                     }
@@ -329,8 +339,6 @@ public class MainActivity extends Activity implements View.OnClickListener{
 
     private void initView(boolean loading){
         if(loading){
-            layBar.setVisibility(View.INVISIBLE);
-            layContent.setVisibility(View.INVISIBLE);
             layMain.setBackgroundResource(R.drawable.loading_bg);
             pdg=ProgressDialog.show(this,null,getString(R.string.tip_find_device),true,true,new DialogInterface.OnCancelListener() {
                 @Override
@@ -386,11 +394,10 @@ public class MainActivity extends Activity implements View.OnClickListener{
                             });
                             btop.operation();
                         }
-                    }).setNegativeButton(R.string.btn_exit, new DialogInterface.OnClickListener() {
+                    }).setNegativeButton(R.string.btn_cancel, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             dialog.dismiss();
-                            finish();
                         }
                     }).create();
             ;

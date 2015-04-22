@@ -4,6 +4,7 @@
     <string name="btn_ok">OK</string>
     <string name="btn_retry">Retry</string>
     <string name="btn_exit">Exit</string>
+    <string name="btn_cancel">Cancel</string>
 
     <!--bluetooth-->
     <string name="tip_find_device">Searching devices...</string>

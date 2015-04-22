@@ -45,11 +45,11 @@ public class BluetoothClientOp {
 	/** 连接方式：是否主动发起配�? 默认为false */
 	private boolean isMatchBeforeConnect=false;
 	/** 搜索重试次数 */
-	private int SEARCH_COUNT=1;
+	private int SEARCH_COUNT=0;
 	/** 搜索重试次数计数 */
 	private int search_count=0;
 	/** 连接重试次数 */
-	private int CONNECT_COUNT=1;
+	private int CONNECT_COUNT=0;
 	/** 连接重试次数计数 */
 	private int connect_count=0;
 	/** 配对重试次数计数 */
