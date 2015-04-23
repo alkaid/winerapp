@@ -11,6 +11,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.drawable.AnimationDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -43,12 +44,16 @@ public class MainActivity extends Activity implements View.OnClickListener{
     private static final int MSG_WHAT_UPDATE_STATUS=4;
     private static final int MSG_WHAT_VERIFY_ERROR=5;
 
+    private AnimationDrawable animLightOn,animSwitchOn,animTurnBack,animTurnForward;
+
+
 //    private static final String BUNDLE_KEY_ERRORMSG="BUNDLE_KEY_ERRORMSG";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        //find view
         layBar=findViewById(R.id.layBar);
         layMain=findViewById(R.id.layMain);
         layContent=findViewById(R.id.layContent);
@@ -58,6 +63,11 @@ public class MainActivity extends Activity implements View.OnClickListener{
         imgSwitchStatus= (ImageView) findViewById(R.id.imgSwitchStatus);
         imgCurMoto= (ImageView) findViewById(R.id.imgCurMoto);
         imgCurTpd= (ImageView) findViewById(R.id.imgCurTpd);
+        //init anim
+        animLightOn= (AnimationDrawable) getResources().getDrawable(R.drawable.anim_light_on);
+        animSwitchOn= (AnimationDrawable) getResources().getDrawable(R.drawable.anim_switch_on);
+        animTurnBack= (AnimationDrawable) getResources().getDrawable(R.drawable.anim_turn_back);
+        animTurnForward= (AnimationDrawable) getResources().getDrawable(R.drawable.anim_turn_forward);
         //Test
         status=new Status();
         btop = new BluetoothClientOp(this,true){
@@ -105,7 +115,7 @@ public class MainActivity extends Activity implements View.OnClickListener{
                     pdg=ProgressDialog.show(MainActivity.this,null,MainActivity.this.getString(R.string.beginVerify),true,true,new DialogInterface.OnCancelListener() {
                         @Override
                         public void onCancel(DialogInterface dialog) {
-                            btop.cancel();
+                            shutdown();
                             dismissPdg();
                             handleError(getString(R.string.cancelVerifyDevice));
                         }
@@ -151,8 +161,6 @@ public class MainActivity extends Activity implements View.OnClickListener{
                     case MSG_WHAT_VERIFY_ERROR:
                         String emsg= (String) msg.obj;
                         handleError(emsg);
-                        layBar.setVisibility(View.VISIBLE);
-                        layContent.setVisibility(View.VISIBLE);
                         break;
                     case MSG_WHAT_UPDATE_STATUS:
                         dismissPdg();
@@ -169,95 +177,109 @@ public class MainActivity extends Activity implements View.OnClickListener{
 
     }
 
+    private void shutdown(){
+        if(null!=reader) reader.shutdown();
+        btop.cancel();
+    }
+
     private void startReader(){
         if(null!=reader) reader.shutdown();
-        reader=new PacketReader(btop.getMmSocket());
-        //TODO 应有超时监控
-        reader.setPacketReadListener(new PacketReader.PacketReadListener() {
-            @Override
-            public void onPacketRead(S2cPacket packet) {
-                if(packet instanceof S2cLoginPacket){
-                    S2cLoginPacket loginPacket=(S2cLoginPacket)packet;
-                    int verfication=Util.encode(status.getAuthCode());
-                    Log.d(TAG,"上位机randNo="+status.getAuthCode()+" verficaiton="+verfication+" 下位机verfication="+loginPacket.getVerification());
-                    if(verfication==loginPacket.getVerification()){
-                        status.setMotoNums(loginPacket.getMotoNums());
-                        //验证成功
+        if(null==reader) {
+            reader = new PacketReader(btop.getMmSocket());
+            //TODO 应有超时监控
+            reader.setPacketReadListener(new PacketReader.PacketReadListener() {
+                @Override
+                public void onPacketRead(S2cPacket packet) {
+                    if (packet instanceof S2cLoginPacket) {
+                        S2cLoginPacket loginPacket = (S2cLoginPacket) packet;
+                        int verfication = Util.encode(status.getAuthCode());
+                        Log.d(TAG, "上位机randNo=" + status.getAuthCode() + " verficaiton=" + verfication + " 下位机verfication=" + loginPacket.getVerification());
+                        if (verfication == loginPacket.getVerification()) {
+                            status.setMotoNums(loginPacket.getMotoNums());
+                            //验证成功
 //                        initView(false);
-                        mHandler.sendEmptyMessage(MSG_WHAT_INIT_VIEW_UNLOAD);
-                    }else{
-                        Message msg=mHandler.obtainMessage(MSG_WHAT_VERIFY_ERROR);
-                        msg.obj=getString(R.string.verifyFailed);
-                        mHandler.sendMessage(msg);
+                            mHandler.sendEmptyMessage(MSG_WHAT_INIT_VIEW_UNLOAD);
+                        } else {
+                            Message msg = mHandler.obtainMessage(MSG_WHAT_VERIFY_ERROR);
+                            msg.obj = getString(R.string.verifyFailed);
+                            mHandler.sendMessage(msg);
+                        }
+                    } else if (packet instanceof S2cDefaultResponse) {
+                        switch (status.getCurCmd()) {
+                            //根据之前的命令更新状态
+                            case Status.CMD_LIGHT_OFF:
+                                status.setLightOn(false);
+                                break;
+                            case Status.CMD_LIGHT_ON:
+                                status.setLightOn(true);
+                                break;
+                            case Status.CMD_MOTO:
+                                status.changeMoto();
+                                break;
+                            case Status.CMD_SWITCH_OFF:
+                                status.setSwitchOn(false);
+                                break;
+                            case Status.CMD_SWITCH_ON:
+                                status.setSwitchOn(true);
+                                break;
+                            case Status.CMD_TPD:
+                                status.changeTpd();
+                                break;
+                            case Status.CMD_TURN_ALL:
+                                status.setTurnStatus(Status.TURN_STATUS_ALL);
+                                break;
+                            case Status.CMD_TURN_BACK:
+                                status.setTurnStatus(Status.TURN_STATUS_BACK);
+                                break;
+                            case Status.CMD_TURN_FOWARD:
+                                status.setTurnStatus(Status.TURN_STATUS_FORWARD);
+                                break;
+                        }
+                        mHandler.sendEmptyMessage(MSG_WHAT_UPDATE_STATUS);
                     }
-                }else if(packet instanceof S2cDefaultResponse){
-                    switch (status.getCurCmd()){
-                        //根据之前的命令更新状态
-                        case Status.CMD_LIGHT_OFF:
-                            status.setLightOn(false);
-                            break;
-                        case Status.CMD_LIGHT_ON:
-                            status.setLightOn(true);
-                            break;
-                        case Status.CMD_MOTO:
-                            status.changeMoto();
-                            break;
-                        case Status.CMD_SWITCH_OFF:
-                            status.setSwitchOn(false);
-                            break;
-                        case Status.CMD_SWITCH_ON:
-                            status.setSwitchOn(true);
-                            break;
-                        case Status.CMD_TPD:
-                            status.changeTpd();
-                            break;
-                        case Status.CMD_TURN_ALL:
-                            status.setTurnStatus(Status.TURN_STATUS_ALL);
-                            break;
-                        case Status.CMD_TURN_BACK:
-                            status.setTurnStatus(Status.TURN_STATUS_BACK);
-                            break;
-                        case Status.CMD_TURN_FOWARD:
-                            status.setTurnStatus(Status.TURN_STATUS_FORWARD);
-                            break;
-                    }
-                    mHandler.sendEmptyMessage(MSG_WHAT_UPDATE_STATUS);
                 }
-            }
-            @Override
-            public void onException(Exception e) {
-                Log.e(TAG,"",e);
-                handleError(getString(R.string.unknowException)+"\n"+e.getMessage());
-            }
-        });
+
+                @Override
+                public void onException(Exception e) {
+                    Log.e(TAG, "", e);
+                    handleError(getString(R.string.unknowException) + "\n" + e.getMessage());
+                }
+            });
+        }
         reader.startup();
     }
 
     private void updateStatusView(){
         //TODO 应有动画播放
-        switch (status.getTurnStatus()){
-            case Status.TURN_STATUS_ALL:
-                imgTurnBack.setVisibility(View.VISIBLE);
-                imgTurnForward.setVisibility(View.VISIBLE);
-                break;
-            case Status.TURN_STATUS_BACK:
-                imgTurnBack.setVisibility(View.VISIBLE);
-                imgTurnForward.setVisibility(View.INVISIBLE);
-                break;
-            case Status.TURN_STATUS_FORWARD:
-                imgTurnBack.setVisibility(View.INVISIBLE);
-                imgTurnForward.setVisibility(View.VISIBLE);
-                break;
-        }
-        if(status.isLightOn()){
-            imgLightStatus.setImageResource(R.drawable.ico_light_01);
-        }else{
-            imgLightStatus.setImageResource(R.drawable.ico_light_05);
-        }
-        if(status.isSwitchOn()){
-            imgSwitchStatus.setImageResource(R.drawable.ico_turn_01);
-        }else{
-            imgSwitchStatus.setImageResource(R.drawable.ico_turn_00);
+        if(PacketReader.logined){
+
+        }else {
+            imgTurnForward.setImageResource(R.drawable.r01);
+            imgTurnBack.setImageResource(R.drawable.l01);
+            switch (status.getTurnStatus()) {
+                case Status.TURN_STATUS_ALL:
+                    imgTurnBack.setVisibility(View.VISIBLE);
+                    imgTurnForward.setVisibility(View.VISIBLE);
+                    break;
+                case Status.TURN_STATUS_BACK:
+                    imgTurnBack.setVisibility(View.VISIBLE);
+                    imgTurnForward.setVisibility(View.INVISIBLE);
+                    break;
+                case Status.TURN_STATUS_FORWARD:
+                    imgTurnBack.setVisibility(View.INVISIBLE);
+                    imgTurnForward.setVisibility(View.VISIBLE);
+                    break;
+            }
+            if (status.isLightOn()) {
+                imgLightStatus.setImageResource(R.drawable.ico_light_05);
+            } else {
+                imgLightStatus.setImageResource(R.drawable.ico_light_00);
+            }
+            if (status.isSwitchOn()) {
+                imgSwitchStatus.setImageResource(R.drawable.ico_turn_01);
+            } else {
+                imgSwitchStatus.setImageResource(R.drawable.ico_turn_00);
+            }
         }
         imgCurMoto.setImageBitmap(drawNumImg(status.getCurMoto()));
         imgCurTpd.setImageBitmap(drawNumImg(status.getTpd()));
@@ -303,6 +325,10 @@ public class MainActivity extends Activity implements View.OnClickListener{
     @Override
     public void onClick(View v) {
         int cmd=-1;
+        if(!PacketReader.logined){
+            handleError(getString(R.string.notConnectedWhenSendCmd));
+            return;
+        }
         switch (v.getId()){
             case R.id.imgLight:
                 cmd = status.isLightOn()?Status.CMD_LIGHT_OFF:Status.CMD_LIGHT_ON;
@@ -343,12 +369,12 @@ public class MainActivity extends Activity implements View.OnClickListener{
             pdg=ProgressDialog.show(this,null,getString(R.string.tip_find_device),true,true,new DialogInterface.OnCancelListener() {
                 @Override
                 public void onCancel(DialogInterface dialog) {
-                    btop.cancel();
+                    shutdown();
                     dismissPdg();
-                    handleError(getString(R.string.cancelChooseDevice));
+                    handleError(getString(R.string.cancelSearchDevice));
                 }
             });
-            btop.cancel();
+            shutdown();
             if(Constants.D) Log.d(TAG, "开始蓝牙操作");
             Util.toast(getApplicationContext(), "开始蓝牙操作");
             btop.operation();
@@ -371,11 +397,11 @@ public class MainActivity extends Activity implements View.OnClickListener{
     private void handleError(String msg){
         dismissPdg();
 //        Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
-        btop.cancel();
+        shutdown();
         if(null!=reader){
             reader.shutdown();
         }
-        msg+="\nPlease retry or exit.";
+        msg+=getString(R.string.tip_error_append);
         if(null!=errorDialog&&errorDialog.isShowing()){
             errorDialog.setMessage(msg);
         }else {
@@ -388,8 +414,8 @@ public class MainActivity extends Activity implements View.OnClickListener{
                             pdg = ProgressDialog.show(MainActivity.this, null, getString(R.string.tip_find_device), true, true, new DialogInterface.OnCancelListener() {
                                 @Override
                                 public void onCancel(DialogInterface dialog) {
-                                    btop.cancel();
-                                    finish();
+                                    shutdown();
+                                    handleError(getString(R.string.cancelSearchDevice));
                                 }
                             });
                             btop.operation();
@@ -402,6 +428,7 @@ public class MainActivity extends Activity implements View.OnClickListener{
                     }).create();
             ;
             errorDialog.show();
+            initView(false);
         }
     }
 
@@ -418,7 +445,7 @@ public class MainActivity extends Activity implements View.OnClickListener{
             pdg=ProgressDialog.show(this,null,getString(R.string.tip_connect_device),true,true,new DialogInterface.OnCancelListener() {
                 @Override
                 public void onCancel(DialogInterface dialog) {
-                    btop.cancel();
+                    shutdown();
                     dismissPdg();
                     handleError(getString(R.string.cancelConnectDevice));
                 }

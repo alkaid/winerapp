@@ -41,7 +41,6 @@ public class PacketReader {
 
     public PacketReader(BluetoothSocket socket) {
         this.socket = socket;
-        this.init();
     }
 
      public void setPacketReadListener(PacketReadListener packetReadListener) {
@@ -64,6 +63,7 @@ public class PacketReader {
     }
 
     public void startup() {
+        init();
         readerThread.start();
     }
 
