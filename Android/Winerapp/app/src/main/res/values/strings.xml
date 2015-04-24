@@ -23,6 +23,8 @@
     <string name="matchFailed">Match failed!</string>
     <!--错误提示：未知错误-->
     <string name="unknowException">Unknow exception:</string>
+    <!--错误提示：连接错误-->
+    <string name="connectException">Connection broken!Maybe the server is busy or shutdown.</string>
     <!--提示：连接成功配对成功-->
     <string name="matchedConnected">Connect and match success!</string>
     <!--提示：您中途取消了搜索设备的操作-->

@@ -242,7 +242,13 @@ public class MainActivity extends Activity implements View.OnClickListener{
                 @Override
                 public void onException(Exception e) {
                     Log.e(TAG, "", e);
-                    handleError(getString(R.string.unknowException) + "\n" + e.getMessage());
+                    Message msg=mHandler.obtainMessage(MSG_WHAT_ERROR);
+                    if(e instanceof IOException){
+                        msg.obj=getString(R.string.connectException);
+                    }else {
+                        msg.obj = getString(R.string.unknowException) + "\n" + e.getMessage();
+                    }
+                    mHandler.sendMessage(msg);
                 }
             });
         }
@@ -251,25 +257,36 @@ public class MainActivity extends Activity implements View.OnClickListener{
 
     private void updateStatusView(){
         //TODO 应有动画播放
-        if(PacketReader.logined){
+        if(PacketReader.logined) {
+            imgTurnBack.setImageDrawable(animTurnBack);
+            animTurnBack.stop();
+            animTurnBack.start();
+            imgTurnForward.setImageDrawable(animTurnForward);
+            animTurnForward.stop();
+            animTurnForward.start();
+
+            if (status.isLightOn()) {
+                imgLightStatus.setImageDrawable(animLightOn);
+                animLightOn.stop();
+                animLightOn.start();
+            } else {
+                imgLightStatus.setImageResource(R.drawable.ico_light_00);
+            }
+            if (status.isSwitchOn()) {
+                imgSwitchStatus.setImageDrawable(animSwitchOn);
+                animSwitchOn.stop();
+                animSwitchOn.start();
+            } else {
+                imgSwitchStatus.setImageResource(R.drawable.ico_turn_00);
+            }
 
         }else {
+            animTurnBack.stop();
+            animTurnForward.stop();
+            animSwitchOn.stop();
+            animLightOn.stop();
             imgTurnForward.setImageResource(R.drawable.r01);
             imgTurnBack.setImageResource(R.drawable.l01);
-            switch (status.getTurnStatus()) {
-                case Status.TURN_STATUS_ALL:
-                    imgTurnBack.setVisibility(View.VISIBLE);
-                    imgTurnForward.setVisibility(View.VISIBLE);
-                    break;
-                case Status.TURN_STATUS_BACK:
-                    imgTurnBack.setVisibility(View.VISIBLE);
-                    imgTurnForward.setVisibility(View.INVISIBLE);
-                    break;
-                case Status.TURN_STATUS_FORWARD:
-                    imgTurnBack.setVisibility(View.INVISIBLE);
-                    imgTurnForward.setVisibility(View.VISIBLE);
-                    break;
-            }
             if (status.isLightOn()) {
                 imgLightStatus.setImageResource(R.drawable.ico_light_05);
             } else {
@@ -280,6 +297,20 @@ public class MainActivity extends Activity implements View.OnClickListener{
             } else {
                 imgSwitchStatus.setImageResource(R.drawable.ico_turn_00);
             }
+        }
+        switch (status.getTurnStatus()) {
+            case Status.TURN_STATUS_ALL:
+                imgTurnBack.setVisibility(View.VISIBLE);
+                imgTurnForward.setVisibility(View.VISIBLE);
+                break;
+            case Status.TURN_STATUS_BACK:
+                imgTurnBack.setVisibility(View.VISIBLE);
+                imgTurnForward.setVisibility(View.INVISIBLE);
+                break;
+            case Status.TURN_STATUS_FORWARD:
+                imgTurnBack.setVisibility(View.INVISIBLE);
+                imgTurnForward.setVisibility(View.VISIBLE);
+                break;
         }
         imgCurMoto.setImageBitmap(drawNumImg(status.getCurMoto()));
         imgCurTpd.setImageBitmap(drawNumImg(status.getTpd()));
@@ -314,7 +345,7 @@ public class MainActivity extends Activity implements View.OnClickListener{
 
     private void sendCmd(int cmd){
         try {
-            Util.writeSocketData(btop.getMmSocket(),cmd,2);
+            Util.writeSocketData(btop.getMmSocket(),cmd,1);
         } catch (IOException e) {
             Log.e(TAG,"",e);
             handleError(getString(R.string.unknowException)+"\n"+e.getMessage());
@@ -398,9 +429,7 @@ public class MainActivity extends Activity implements View.OnClickListener{
         dismissPdg();
 //        Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
         shutdown();
-        if(null!=reader){
-            reader.shutdown();
-        }
+        initView(false);
         msg+=getString(R.string.tip_error_append);
         if(null!=errorDialog&&errorDialog.isShowing()){
             errorDialog.setMessage(msg);
@@ -428,7 +457,6 @@ public class MainActivity extends Activity implements View.OnClickListener{
                     }).create();
             ;
             errorDialog.show();
-            initView(false);
         }
     }
 

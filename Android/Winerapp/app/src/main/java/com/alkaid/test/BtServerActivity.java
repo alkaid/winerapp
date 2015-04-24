@@ -13,5 +13,6 @@ public class BtServerActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(new View(this));
         BluetoothServerOp bsop=new BluetoothServerOp(this);
+
     }
 }

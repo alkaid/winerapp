@@ -72,9 +72,7 @@ public class PacketReader {
      */
     public void shutdown() {
         // Notify connection listeners of the connection closing if done hasn't already been set.
-        if (!done) {
-            logined=false;
-        }
+        logined=false;
         done = true;
     }
 

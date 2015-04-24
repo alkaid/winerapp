@@ -1,10 +1,12 @@
 package com.alkaid.test;
 
+import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.alkaid.winerapp.Constants;
 import com.alkaid.winerapp.Util;
@@ -103,7 +105,7 @@ public class BluetoothServerOp {
         com.alkaid.winerapp.PacketReader.logined=false;
         reader.setPacketReadListener(new PacketReader.PacketReadListener() {
             @Override
-            public void onPacketRead(C2sPacket packet) {
+            public void onPacketRead(final C2sPacket packet) {
                 if(packet instanceof C2sLoginPacket){
                     int encodeNo=Util.encode(((C2sLoginPacket) packet).getNum());
                     String data=encodeNo+"08";
@@ -113,8 +115,14 @@ public class BluetoothServerOp {
                         e.printStackTrace();
                     }
                 }else if(packet instanceof C2sCmdPacket){
+                    ((Activity)ctx).runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(ctx, ((C2sCmdPacket)packet).getCmd()+"",Toast.LENGTH_SHORT).show();
+                        }
+                    });
                     try {
-                        Util.writeSocketData(socket,0xAA,2);
+                        Util.writeSocketData(socket,0xAA,1);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
