@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
+	<false/>
+	<key>IDESourceControlProjectIdentifier</key>
+	<string>D71E403C-0E63-4567-8E6E-3D479386D9D8</string>
+	<key>IDESourceControlProjectName</key>
+	<string>WatchWinder</string>
+	<key>IDESourceControlProjectOriginsDictionary</key>
+	<dict>
+		<key>692D18F3C5F8E2385F7742E442D0AFC6B74512C1</key>
+		<string>https://github.com/alkaid/winerapp.git</string>
+	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>IOS/WatchWinder/WatchWinder.xcodeproj</string>
+	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
+	<dict>
+		<key>692D18F3C5F8E2385F7742E442D0AFC6B74512C1</key>
+		<string>../../../..</string>
+	</dict>
+	<key>IDESourceControlProjectURL</key>
+	<string>https://github.com/alkaid/winerapp.git</string>
+	<key>IDESourceControlProjectVersion</key>
+	<integer>111</integer>
+	<key>IDESourceControlProjectWCCIdentifier</key>
+	<string>692D18F3C5F8E2385F7742E442D0AFC6B74512C1</string>
+	<key>IDESourceControlProjectWCConfigurations</key>
+	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>692D18F3C5F8E2385F7742E442D0AFC6B74512C1</string>
+			<key>IDESourceControlWCCName</key>
+			<string>winerapp</string>
+		</dict>
+	</array>
+</dict>
+</plist>
