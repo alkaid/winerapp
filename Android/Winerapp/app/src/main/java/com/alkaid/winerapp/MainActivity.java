@@ -125,6 +125,12 @@ public class MainActivity extends Activity implements View.OnClickListener{
                     //开始验证链接
                     int randNo = (int) (Math.random() * 1000);
                     randNo = randNo < 100 ? randNo + 100 : randNo;
+                    if(randNo>127){
+                        int length=String.valueOf(randNo).length();
+                        int high = randNo/ (int)Math.pow(10,length-1);
+                        int low=randNo%10;
+                        randNo=high*10+low;
+                    }
                     status.setAuthCode(randNo);
                     //Test
                     try {
@@ -134,7 +140,8 @@ public class MainActivity extends Activity implements View.OnClickListener{
                     }
                     try {
                         //Util.writeSocketData(btop.getMmSocket(),randNo,2);
-                        Util.writeSocketData(btop.getMmSocket(),String.valueOf(randNo).getBytes());
+//                        Util.writeSocketData(btop.getMmSocket(),String.valueOf(randNo).getBytes());
+                        Util.writeSocketData(btop.getMmSocket(),randNo,1);
                     } catch (IOException e) {
                         Log.e(TAG,"Write auth code to server error!",e);
                         handleError(e.getMessage());
@@ -192,7 +199,8 @@ public class MainActivity extends Activity implements View.OnClickListener{
                 public void onPacketRead(S2cPacket packet) {
                     if (packet instanceof S2cLoginPacket) {
                         S2cLoginPacket loginPacket = (S2cLoginPacket) packet;
-                        int verfication = Util.encode(status.getAuthCode());
+//                        int verfication = Util.encode(status.getAuthCode());
+                        int verfication=status.getAuthCode();
                         Log.d(TAG, "上位机randNo=" + status.getAuthCode() + " verficaiton=" + verfication + " 下位机verfication=" + loginPacket.getVerification());
                         if (verfication == loginPacket.getVerification()) {
                             status.setMotoNums(loginPacket.getMotoNums());

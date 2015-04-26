@@ -8,15 +8,16 @@ import android.util.Log;
 public class S2cLoginPacket extends S2cPacket {
     private String initData;
     private int verification;
-    private int motoNums;
+    private int motoNums=0;
     public S2cLoginPacket(byte[] data)throws Exception{
         super(data);
         this.initData=new String(data);
         if(Constants.D) Log.d("Alkaid", "S2cLoginPacket str=" + initData);
-        String motoNumStr=initData.substring(initData.length()-2,initData.length());
-        String verificationStr=initData.substring(0,initData.length()-2);
-        motoNums=Integer.parseInt(motoNumStr);
-        verification=Integer.parseInt(verificationStr);
+//        String motoNumStr=initData.substring(initData.length()-2,initData.length());
+//        String verificationStr=initData.substring(0,initData.length()-2);
+//        motoNums=Integer.parseInt(motoNumStr);
+//        verification=Integer.parseInt(verificationStr);
+        verification=Util.byteArrayToInt(data);
     }
 
     public String getInitData() {
