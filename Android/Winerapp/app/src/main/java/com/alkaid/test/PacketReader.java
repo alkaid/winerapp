@@ -37,7 +37,8 @@ import java.io.InputStream;
 *
 */
 public class PacketReader {
-   public static boolean logined=false;
+//   public static boolean logined=false;
+    public static boolean logined=true; //TODO test
    private Thread readerThread;
    private boolean done;
     private  BluetoothSocket socket;
@@ -59,7 +60,8 @@ public class PacketReader {
     */
    protected void init() {
        done = false;
-       logined=false;
+       //TODO test
+//       logined=false;
        readerThread = new Thread() {
            public void run() {
                parsePackets(this);
@@ -77,9 +79,8 @@ public class PacketReader {
     */
    public void shutdown() {
        // Notify connection listeners of the connection closing if done hasn't already been set.
-       if (!done) {
-           logined=false;
-       }
+       //TODO test
+//           logined=false;
        done = true;
    }
 

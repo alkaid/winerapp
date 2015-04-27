@@ -36,6 +36,7 @@ public class MainActivity extends Activity implements View.OnClickListener{
     private Status status;
     private View layBar,layMain,layContent;
     private ImageView imgTurnForward,imgTurnBack,imgLightStatus,imgSwitchStatus,imgCurMoto,imgCurTpd;
+    private ImageView imgLight,imgMoto,imgSwitch,imgTpd,imgTurn;
     private Handler mHandler;
 
     private static final int MSG_WHAT_INIT_VIEW_UNLOAD=1;
@@ -63,6 +64,12 @@ public class MainActivity extends Activity implements View.OnClickListener{
         imgSwitchStatus= (ImageView) findViewById(R.id.imgSwitchStatus);
         imgCurMoto= (ImageView) findViewById(R.id.imgCurMoto);
         imgCurTpd= (ImageView) findViewById(R.id.imgCurTpd);
+
+        imgLight= (ImageView) findViewById(R.id.imgLight);
+        imgMoto= (ImageView) findViewById(R.id.imgMoto);
+        imgSwitch= (ImageView) findViewById(R.id.imgSwitch);
+        imgTpd= (ImageView) findViewById(R.id.imgTpd);
+        imgTurn= (ImageView) findViewById(R.id.imgTurn);
         //init anim
         animLightOn= (AnimationDrawable) getResources().getDrawable(R.drawable.anim_light_on);
         animSwitchOn= (AnimationDrawable) getResources().getDrawable(R.drawable.anim_switch_on);
@@ -138,14 +145,14 @@ public class MainActivity extends Activity implements View.OnClickListener{
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-                    try {
+                    /*try {
                         //Util.writeSocketData(btop.getMmSocket(),randNo,2);
 //                        Util.writeSocketData(btop.getMmSocket(),String.valueOf(randNo).getBytes());
                         Util.writeSocketData(btop.getMmSocket(),randNo,1);
                     } catch (IOException e) {
                         Log.e(TAG,"Write auth code to server error!",e);
                         handleError(e.getMessage());
-                    }
+                    }*/
                 }else{
                     handleError(getString(R.string.connectionFailed));
                 }
@@ -170,7 +177,8 @@ public class MainActivity extends Activity implements View.OnClickListener{
                         handleError(emsg);
                         break;
                     case MSG_WHAT_UPDATE_STATUS:
-                        dismissPdg();
+//                        dismissPdg();
+                        enableOrDisableUI(true);
                         updateStatusView();
                         break;
                     default:
@@ -264,7 +272,6 @@ public class MainActivity extends Activity implements View.OnClickListener{
     }
 
     private void updateStatusView(){
-        //TODO 应有动画播放
         if(PacketReader.logined) {
             imgTurnBack.setImageDrawable(animTurnBack);
             animTurnBack.stop();
@@ -397,9 +404,18 @@ public class MainActivity extends Activity implements View.OnClickListener{
             default:
                 return;
         }
-        pdg=ProgressDialog.show(MainActivity.this,null,null,true,false);
+//        pdg=ProgressDialog.show(MainActivity.this,null,null,true,false);
+        enableOrDisableUI(false);
         status.setCurCmd(cmd);
         sendCmd(cmd);
+    }
+
+    private void enableOrDisableUI(boolean enable){
+        imgLight.setEnabled(enable);
+        imgMoto.setEnabled(enable);
+        imgSwitch.setEnabled(enable);
+        imgTpd.setEnabled(enable);
+        imgTurn.setEnabled(enable);
     }
 
     private void initView(boolean loading){
