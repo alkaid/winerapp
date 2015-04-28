@@ -119,14 +119,15 @@ public class MainActivity extends Activity implements View.OnClickListener{
                 if(success) {
                     dismissPdg();
                     Toast.makeText(getApplicationContext(), R.string.matchedConnected, Toast.LENGTH_SHORT).show();
-                    pdg=ProgressDialog.show(MainActivity.this,null,MainActivity.this.getString(R.string.beginVerify),true,true,new DialogInterface.OnCancelListener() {
+                    //TODO test
+                    /*pdg=ProgressDialog.show(MainActivity.this,null,MainActivity.this.getString(R.string.beginVerify),true,true,new DialogInterface.OnCancelListener() {
                         @Override
                         public void onCancel(DialogInterface dialog) {
                             shutdown();
                             dismissPdg();
                             handleError(getString(R.string.cancelVerifyDevice));
                         }
-                    });
+                    });*/
                     status=new Status();
                     startReader();
                     //开始验证链接
