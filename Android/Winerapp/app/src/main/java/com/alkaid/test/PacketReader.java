@@ -37,8 +37,7 @@ import java.io.InputStream;
 *
 */
 public class PacketReader {
-//   public static boolean logined=false;
-    public static boolean logined=true; //TODO test
+   private static boolean logined=false;
    private Thread readerThread;
    private boolean done;
     private  BluetoothSocket socket;
@@ -54,14 +53,21 @@ public class PacketReader {
         this.packetReadListener = packetReadListener;
     }
 
+    public static boolean isLogined() {
+        return logined;
+    }
+
+    public static void setLogined(boolean logined) {
+        PacketReader.logined = logined;
+    }
+
     /**
     * Initializes the reader in order to be used. The reader is initialized during the
     * first connection and when reconnecting due to an abruptly disconnection.
     */
    protected void init() {
        done = false;
-       //TODO test
-//       logined=false;
+       setLogined(false);
        readerThread = new Thread() {
            public void run() {
                parsePackets(this);
@@ -79,8 +85,7 @@ public class PacketReader {
     */
    public void shutdown() {
        // Notify connection listeners of the connection closing if done hasn't already been set.
-       //TODO test
-//           logined=false;
+       setLogined(false);
        done = true;
    }
 
@@ -104,9 +109,9 @@ public class PacketReader {
                }
                byte[] data=outSteam.toByteArray();
                C2sPacket packet=null;
-               if(!logined){
+               if(!isLogined()){
                    packet=new C2sLoginPacket(data);
-                   logined=true;
+                   setLogined(true);
                }else{
                    packet=new C2sCmdPacket(data);
                }

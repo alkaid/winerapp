@@ -273,7 +273,7 @@ public class MainActivity extends Activity implements View.OnClickListener{
     }
 
     private void updateStatusView(){
-        if(PacketReader.logined) {
+        if(PacketReader.isLogined()) {
             imgTurnBack.setImageDrawable(animTurnBack);
             animTurnBack.stop();
             animTurnBack.start();
@@ -372,7 +372,7 @@ public class MainActivity extends Activity implements View.OnClickListener{
     @Override
     public void onClick(View v) {
         int cmd=-1;
-        if(!PacketReader.logined){
+        if(!PacketReader.isLogined()){
             handleError(getString(R.string.notConnectedWhenSendCmd));
             return;
         }

@@ -102,7 +102,7 @@ public class BluetoothServerOp {
 
     private void manageConnectedSocket(final BluetoothSocket socket) {
         PacketReader reader=new PacketReader(socket);
-        com.alkaid.winerapp.PacketReader.logined=false;
+        PacketReader.setLogined(false);
         reader.setPacketReadListener(new PacketReader.PacketReadListener() {
             @Override
             public void onPacketRead(final C2sPacket packet) {
