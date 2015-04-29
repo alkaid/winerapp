@@ -22,7 +22,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-<!--        <activity
+        <activity
             android:name="com.alkaid.test.BtServerActivity"
             android:label="@string/app_name"
             android:icon="@drawable/bar_turn"
@@ -31,7 +31,8 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>-->
+        </activity>
+
         <activity android:name=".DevicesList" android:theme="@style/Theme.AppCompat.Dialog"/>
     </application>
 

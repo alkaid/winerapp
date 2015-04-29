@@ -54,7 +54,8 @@ public class PacketReader {
     }
 
     public static boolean isLogined() {
-        return logined;
+        //return logined;
+        return true;
     }
 
     public static void setLogined(boolean logined) {
