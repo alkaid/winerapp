@@ -146,6 +146,8 @@ public class MainActivity extends Activity implements View.OnClickListener{
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
+                    //TODO Test
+                    initView(false);
                     /*try {
                         //Util.writeSocketData(btop.getMmSocket(),randNo,2);
 //                        Util.writeSocketData(btop.getMmSocket(),String.valueOf(randNo).getBytes());
@@ -406,7 +408,8 @@ public class MainActivity extends Activity implements View.OnClickListener{
                 return;
         }
 //        pdg=ProgressDialog.show(MainActivity.this,null,null,true,false);
-        enableOrDisableUI(false);
+        //TODO Test
+//        enableOrDisableUI(false);
         status.setCurCmd(cmd);
         sendCmd(cmd);
     }
